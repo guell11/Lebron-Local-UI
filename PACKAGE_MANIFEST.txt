@@ -1,0 +1,16 @@
+LeBRON Local UI v1.0
+
+Backend:
+- FastAPI local server
+- Runtime J-Space NF4 4-bit via Transformers + bitsandbytes
+- Runtime GGUF opcional via llama-cpp-python
+- SQLite chat/note history
+- NVIDIA/system telemetry
+
+Frontend:
+- Responsive dark UI
+- Sidebar, folders, channels, search, notes and workspace
+- Streaming chat, stop, attachments and speech dictation
+- Runtime settings and GPU diagnostics
+
+Model weights and trained artifacts are intentionally not bundled.

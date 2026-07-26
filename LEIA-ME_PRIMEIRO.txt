@@ -1,0 +1,13 @@
+LEBRON LOCAL UI — INÍCIO RÁPIDO (WINDOWS + RTX 4060)
+
+1. Extraia esta pasta.
+2. Rode get_lebron_windows.bat caso o repositório Lebron ainda não esteja ao lado desta pasta.
+3. Rode install_windows.bat.
+4. Rode start_windows.bat.
+5. Abra Configurações na interface.
+6. Use a engine "J-Space NF4 4-bit".
+7. Selecione o dicionário jspace_dictionary_v3.pt e a pasta stage2/final do adapter treinado.
+8. Clique em "Salvar e carregar modelo".
+
+O ZIP não contém os pesos nem os artefatos do treinamento.
+Consulte README.md para instruções completas e solução de erros.

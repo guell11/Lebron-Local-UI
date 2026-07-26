@@ -1,0 +1,8 @@
+torch
+transformers
+accelerate
+bitsandbytes
+huggingface_hub
+fastapi
+uvicorn
+psutil

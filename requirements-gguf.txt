@@ -1,0 +1,2 @@
+# Instale depois de compilar/obter a wheel CUDA adequada para seu Windows.
+llama-cpp-python>=0.3.9

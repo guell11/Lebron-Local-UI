@@ -1,0 +1,10 @@
+{
+  "engine": "jspace_nf4",
+  "lebron_repo": "../Lebron",
+  "base_model": "google/gemma-4-E4B-it",
+  "model_revision": "fee6332c1abaafb77f6f9624236c63aa2f1d0187",
+  "dictionary_path": "artifacts/google-gemma-4-e4b-it-5533e5ff/jspace_dictionary_v3.pt",
+  "adapter_dir": "C:/SEU/CAMINHO/lebron-jspace/google-gemma-4-e4b-it-5533e5ff/quick/stage2/final",
+  "gguf_path": "",
+  "model_label": "LeBRON J-Space E4B"
+}

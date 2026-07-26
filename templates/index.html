@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="dark" />
+  <title>LeBRON Local UI</title>
+  <link rel="stylesheet" href="/static/app.css" />
+</head>
+<body>
+  <div id="app" class="app-shell">
+    <aside id="sidebar" class="sidebar">
+      <div class="brand-row">
+        <button class="brand" id="brandButton" title="LeBRON Local UI">
+          <span class="brand-mark">L</span>
+          <span class="brand-name">LeBRON UI</span>
+        </button>
+        <button class="icon-btn sidebar-toggle" id="sidebarToggle" aria-label="Recolher menu" title="Recolher menu">
+          <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/></svg>
+        </button>
+      </div>
+
+      <nav class="main-nav">
+        <button class="nav-item active" id="newChatButton">
+          <svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"/></svg>
+          <span>Nova conversa</span>
+        </button>
+        <button class="nav-item" id="searchButton">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <span>Pesquisar</span>
+          <kbd>Ctrl K</kbd>
+        </button>
+        <button class="nav-item" id="notesButton">
+          <svg viewBox="0 0 24 24"><path d="M6 3h12a2 2 0 0 1 2 2v16l-4-3-4 3-4-3-4 3V5a2 2 0 0 1 2-2Z"/><path d="M8 8h8M8 12h6"/></svg>
+          <span>Notas</span>
+        </button>
+        <button class="nav-item" id="workspaceButton">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><path d="M17.5 14v7M14 17.5h7"/></svg>
+          <span>Workspace</span>
+        </button>
+      </nav>
+
+      <section class="sidebar-section channel-section">
+        <div class="section-title">Canais</div>
+        <button class="side-entry"><span class="hash">#</span><span>geral</span></button>
+      </section>
+
+      <section class="sidebar-section folders-section">
+        <div class="section-heading-row">
+          <div class="section-title">Pastas</div>
+          <button class="mini-btn" id="addFolderButton" title="Criar pasta">+</button>
+        </div>
+        <div id="folderList" class="entry-list"></div>
+      </section>
+
+      <section class="sidebar-section chats-section">
+        <div class="section-title">Conversas</div>
+        <div id="chatGroups" class="chat-groups"></div>
+      </section>
+
+      <div class="sidebar-footer">
+        <button class="profile-button" id="profileButton">
+          <span class="avatar">LB</span>
+          <span class="profile-copy"><strong>LeBRON Local</strong><small id="gpuFooter">GPU local</small></span>
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+        </button>
+      </div>
+    </aside>
+
+    <main class="main-area">
+      <header class="topbar">
+        <div class="model-menu-wrap">
+          <button class="model-button" id="modelButton">
+            <span id="modelName">LeBRON J-Space E4B</span>
+            <svg viewBox="0 0 24 24"><path d="m7 10 5 5 5-5"/></svg>
+          </button>
+          <div class="model-subline" id="modelSubline">NF4 4-bit • não carregado</div>
+          <div class="dropdown model-dropdown hidden" id="modelDropdown">
+            <button data-engine="jspace_nf4"><strong>J-Space NF4 4-bit</strong><small>Adapter treinado ativo</small></button>
+            <button data-engine="gguf"><strong>GGUF Q4</strong><small>Modelo-base, sem sidecar J-Space</small></button>
+            <div class="dropdown-separator"></div>
+            <button id="openSettingsFromModel"><strong>Configurar modelo</strong><small>Caminhos, token e memória</small></button>
+          </div>
+        </div>
+        <div class="topbar-actions">
+          <span class="runtime-pill" id="runtimePill"><i></i><span>descarregado</span></span>
+          <button class="icon-btn" id="systemButton" title="Sistema e GPU">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" stroke-dasharray="3 3"/></svg>
+          </button>
+          <button class="icon-btn" id="settingsButton" title="Configurações">
+            <svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M14 7a2 2 0 1 0 4 0 2 2 0 0 0-4 0ZM4 17h2M10 17h10M6 17a2 2 0 1 0 4 0 2 2 0 0 0-4 0ZM4 12h5M13 12h7M9 12a2 2 0 1 0 4 0 2 2 0 0 0-4 0Z"/></svg>
+          </button>
+          <button class="avatar top-avatar">LB</button>
+        </div>
+      </header>
+
+      <section id="welcomeView" class="welcome-view">
+        <div class="welcome-inner">
+          <div class="hero-title"><span class="hero-mark">L</span><h1 id="heroModelName">LeBRON J-Space E4B</h1></div>
+          <div class="composer welcome-composer" id="welcomeComposer">
+            <textarea id="welcomeInput" rows="1" placeholder="Como posso ajudar hoje?"></textarea>
+            <div class="composer-row">
+              <div class="composer-left">
+                <button class="composer-icon attach-trigger" title="Anexar arquivo"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+                <button class="composer-icon" id="toolsButton" title="Parâmetros"><svg viewBox="0 0 24 24"><path d="m12 2 2 5 5 2-5 2-2 5-2-5-5-2 5-2Z"/><path d="m19 14 1 2 2 1-2 1-1 2-1-2-2-1 2-1Z"/></svg></button>
+              </div>
+              <div class="composer-right">
+                <span class="attachment-count hidden" id="welcomeAttachmentCount"></span>
+                <button class="voice-icon" title="Ditado"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6"/></svg></button>
+                <button class="send-button" id="welcomeSend" title="Enviar"><svg viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></svg></button>
+              </div>
+            </div>
+          </div>
+          <div class="suggestions" id="suggestions">
+            <div class="suggested-label"><span>ϟ</span> Sugestões</div>
+            <button data-prompt="Crie um snippet de código bem explicado para "><strong>Criar um snippet de código</strong><small>com estrutura limpa e pronta para usar</small></button>
+            <button data-prompt="Me ajude a estudar "><strong>Ajude-me a estudar</strong><small>explique de modo simples e passo a passo</small></button>
+            <button data-prompt="Analise este problema com cuidado: "><strong>Analisar um problema</strong><small>liste riscos, hipóteses e melhor solução</small></button>
+          </div>
+        </div>
+      </section>
+
+      <section id="chatView" class="chat-view hidden">
+        <div id="messages" class="messages"></div>
+        <div class="chat-composer-wrap">
+          <div id="attachmentChips" class="attachment-chips"></div>
+          <div class="composer chat-composer">
+            <textarea id="chatInput" rows="1" placeholder="Envie uma mensagem"></textarea>
+            <div class="composer-row">
+              <div class="composer-left">
+                <button class="composer-icon attach-trigger" title="Anexar arquivo"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+                <button class="composer-icon" id="chatToolsButton" title="Parâmetros"><svg viewBox="0 0 24 24"><path d="m12 2 2 5 5 2-5 2-2 5-2-5-5-2 5-2Z"/></svg></button>
+              </div>
+              <div class="composer-right">
+                <button class="stop-button hidden" id="stopButton"><span></span> Parar</button>
+                <button class="voice-icon"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6"/></svg></button>
+                <button class="send-button" id="chatSend"><svg viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></svg></button>
+              </div>
+            </div>
+          </div>
+          <div class="composer-footnote">O modelo pode cometer erros. Confira informações importantes.</div>
+        </div>
+      </section>
+    </main>
+
+    <input type="file" id="fileInput" class="hidden" multiple accept=".txt,.md,.py,.js,.ts,.tsx,.jsx,.json,.yaml,.yml,.csv,.html,.css,.xml,.log,.sql,text/*" />
+
+    <div id="backdrop" class="backdrop hidden"></div>
+
+    <aside id="settingsDrawer" class="drawer hidden">
+      <div class="drawer-header"><div><h2>Configurações</h2><p>Modelo local e desempenho</p></div><button class="icon-btn close-overlay"><svg viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div>
+      <div class="drawer-tabs">
+        <button class="active" data-tab="model">Modelo</button><button data-tab="generation">Geração</button><button data-tab="appearance">Interface</button>
+      </div>
+      <div class="drawer-content">
+        <div class="tab-panel active" data-panel="model">
+          <div class="notice important"><strong>Para usar seu adapter treinado</strong><span>Use J-Space NF4. O GGUF Q4 do llama.cpp roda apenas o modelo-base até existir suporte nativo ao sidecar.</span></div>
+          <label>Engine<select id="engineSelect"><option value="jspace_nf4">J-Space NF4 4-bit (recomendado)</option><option value="gguf">GGUF Q4 (base somente)</option></select></label>
+          <label>Nome exibido<input id="modelLabelInput" type="text" /></label>
+          <div id="jspaceFields">
+            <label>Pasta do repositório LeBRON<div class="path-row"><input id="repoPathInput" type="text" placeholder="C:\\Projetos\\Lebron"/><button data-dialog="folder" data-target="repoPathInput">…</button></div></label>
+            <label>Modelo-base Hugging Face ou pasta local<input id="baseModelInput" type="text" /></label>
+            <label>Revisão fixa<input id="revisionInput" type="text" /></label>
+            <label>Dicionário J-Space (.pt)<div class="path-row"><input id="dictionaryInput" type="text" placeholder="...jspace_dictionary_v3.pt"/><button data-dialog="file" data-target="dictionaryInput">…</button></div></label>
+            <label>Pasta do adapter final<div class="path-row"><input id="adapterInput" type="text" placeholder="...\\stage2\\final"/><button data-dialog="folder" data-target="adapterInput">…</button></div></label>
+            <label>HF Token da sessão<input id="hfTokenInput" type="password" autocomplete="off" placeholder="hf_... (não é salvo)"/></label>
+          </div>
+          <div id="ggufFields" class="hidden">
+            <label>Arquivo GGUF Q4<div class="path-row"><input id="ggufInput" type="text" placeholder="C:\\Modelos\\modelo-Q4_K_M.gguf"/><button data-dialog="file" data-target="ggufInput">…</button></div></label>
+          </div>
+          <label>Prompt do sistema<textarea id="systemPromptInput" rows="5"></textarea></label>
+          <div class="runtime-actions"><button class="primary" id="saveAndLoadButton">Salvar e carregar</button><button class="secondary" id="unloadButton">Descarregar</button></div>
+          <pre id="runtimeError" class="error-box hidden"></pre>
+        </div>
+        <div class="tab-panel" data-panel="generation">
+          <label>Máximo de novos tokens <output id="maxTokensOutput"></output><input id="maxTokensInput" type="range" min="64" max="2048" step="64" /></label>
+          <label>Temperatura <output id="temperatureOutput"></output><input id="temperatureInput" type="range" min="0" max="1.5" step="0.05" /></label>
+          <label>Top P <output id="topPOutput"></output><input id="topPInput" type="range" min="0.1" max="1" step="0.05" /></label>
+          <label>Loops J-Space <output id="loopsOutput"></output><input id="loopsInput" type="range" min="2" max="16" step="1" /></label>
+          <label>Contexto local<select id="contextInput"><option value="2048">2.048 tokens</option><option value="4096">4.096 tokens</option><option value="8192">8.192 tokens</option><option value="16384">16.384 tokens</option></select></label>
+          <label>Reserva de VRAM <output id="reserveOutput"></output><input id="reserveInput" type="range" min="0.4" max="2" step="0.1" /></label>
+          <div class="notice"><strong>Perfil indicado para RTX 4060 8 GB</strong><span>NF4, contexto 4K, 512 tokens e cerca de 0,75 GiB de reserva.</span></div>
+          <button class="primary wide" id="saveGenerationButton">Salvar parâmetros</button>
+        </div>
+        <div class="tab-panel" data-panel="appearance">
+          <label>Cor de destaque<select id="accentSelect"><option value="amber">Âmbar</option><option value="blue">Azul</option><option value="violet">Violeta</option><option value="green">Verde</option></select></label>
+          <label class="switch-row"><span><strong>Mostrar sugestões</strong><small>Atalhos na tela inicial</small></span><input id="suggestionsToggle" type="checkbox"/><i></i></label>
+          <label class="switch-row"><span><strong>Menu compacto</strong><small>Oculta textos da lateral</small></span><input id="compactToggle" type="checkbox"/><i></i></label>
+          <button class="primary wide" id="saveAppearanceButton">Aplicar interface</button>
+        </div>
+      </div>
+    </aside>
+
+    <section id="searchModal" class="modal hidden">
+      <div class="modal-header"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="searchInput" type="text" placeholder="Pesquisar conversas e mensagens…"/><button class="key-hint">ESC</button></div>
+      <div id="searchResults" class="modal-results"><div class="empty-small">Digite para pesquisar no histórico local.</div></div>
+    </section>
+
+    <section id="notesModal" class="modal notes-modal hidden">
+      <div class="notes-layout">
+        <aside><div class="notes-top"><h3>Notas</h3><button id="newNoteButton">+</button></div><div id="notesList"></div></aside>
+        <div class="note-editor"><input id="noteTitle" placeholder="Título da nota"/><textarea id="noteContent" placeholder="Escreva uma nota local…"></textarea><div><button class="danger-text" id="deleteNoteButton">Excluir</button><button class="primary" id="saveNoteButton">Salvar nota</button></div></div>
+      </div>
+    </section>
+
+    <section id="workspaceModal" class="modal workspace-modal hidden">
+      <div class="workspace-header"><div><h2>Workspace</h2><p>Organize suas conversas em pastas locais.</p></div><button class="icon-btn close-overlay"><svg viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div>
+      <div id="workspaceGrid" class="workspace-grid"></div>
+    </section>
+
+    <section id="systemModal" class="modal system-modal hidden">
+      <div class="workspace-header"><div><h2>Sistema</h2><p>Uso do computador e status do runtime.</p></div><button class="icon-btn close-overlay"><svg viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div>
+      <div id="systemContent" class="system-content"></div>
+    </section>
+
+    <section id="toolsPopover" class="popover hidden">
+      <div class="popover-head"><strong>Parâmetros rápidos</strong><button class="icon-btn" id="closeTools"><svg viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div>
+      <label>Temperatura <output id="quickTempOutput"></output><input id="quickTemp" type="range" min="0" max="1.5" step="0.05"/></label>
+      <label>Loops <output id="quickLoopsOutput"></output><input id="quickLoops" type="range" min="2" max="16" step="1"/></label>
+      <label>Novos tokens <output id="quickTokensOutput"></output><input id="quickTokens" type="range" min="64" max="2048" step="64"/></label>
+    </section>
+
+    <div id="toastStack" class="toast-stack"></div>
+  </div>
+  <script src="/static/app.js" defer></script>
+</body>
+</html>

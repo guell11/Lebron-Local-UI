@@ -1,0 +1,8 @@
+.venv/
+__pycache__/
+*.pyc
+data/*.sqlite3
+data/*.sqlite3-*
+data/settings.json
+offload/*
+!offload/.gitkeep
