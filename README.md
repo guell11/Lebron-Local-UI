@@ -26,89 +26,252 @@ The integration script automates the following steps:
 Paste and execute the following Python script inside a single Kaggle Notebook cell:
 
 ```python
-import os, sys, time, shutil, subprocess, threading
+import os
+import sys
+import time
+import shutil
+import subprocess
+import threading
+import urllib.request
+from pathlib import Path
 
-REPO = "https://github.com/guell11/Lebron-Local-UI"
-WORK_DIR = "/kaggle/working"
-DIR = os.path.join(WORK_DIR, "Lebron-Local-UI")
-MODEL_DIR = os.path.join(WORK_DIR, "J-Space-Deliberation")
-NGROK_TOKEN = "YOUR_NGROK_TOKEN_HERE"
-
-# 1. Environment Directory Setup
-os.chdir(WORK_DIR)
-if os.path.exists(DIR): 
-    shutil.rmtree(DIR)
-
-# 2. Dependency Management
-print("Installing dependencies and latest framework core...")
-subprocess.run(
-    "pip install -q pyngrok gradio fastapi uvicorn git+https://github.com/huggingface/transformers.git accelerate bitsandbytes huggingface_hub psutil", 
-    shell=True
-)
-
-# 3. Model Artifact Synchronization
-print("Downloading model artifacts...")
-from huggingface_hub import snapshot_download
-snapshot_download(repo_id="guell00/J-Space-Deliberation", local_dir=MODEL_DIR)
-
-# 4. Directory Structure Optimization
-stage2_dir = os.path.join(MODEL_DIR, "stage2", "final")
-os.makedirs(stage2_dir, exist_ok=True)
-
-required_files = ["jreasoner_adapter.pt", "jreasoner_config.json", "manifest.json"]
-for file in required_files:
-    src = os.path.join(MODEL_DIR, file)
-    if os.path.exists(src):
-        shutil.move(src, os.path.join(stage2_dir, file))
-
-# 5. Repository Cloning & Interface Installation
-subprocess.run(["git", "clone", REPO, DIR], check=True)
-os.chdir(DIR)
-
-if os.path.exists("requirements.txt"):
-    subprocess.run("pip install -q -r requirements.txt", shell=True)
-
-# 6. Core Module Alignment
-reasoner_path = os.path.join(WORK_DIR, "LeBRON", "lebron_jspace", "reasoner.py")
-if os.path.exists(reasoner_path):
-    with open(reasoner_path, "r") as f:
-        code = f.read()
-    
-    target_statement = "if self.supervision_positions is None:"
-    updated_statement = "if self.supervision_positions is None:\n            positions = torch.tensor([seq - 1], device=slots.device)"
-    
-    if target_statement in code:
-        code = code.replace(target_statement, updated_statement)
-        with open(reasoner_path, "w") as f:
-            f.write(code)
-        print("-> Core module configuration successfully updated.")
-
-# 7. Web Server Startup
-process = subprocess.Popen(
-    [sys.executable, "-m", "uvicorn", "app:app", "--host", "0.0.0.0", "--port", "7860"],
-    stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1
-)
-
-def stream_logs():
-    for line in iter(process.stdout.readline, ''):
-        if line: print(line.strip())
-
-threading.Thread(target=stream_logs, daemon=True).start()
-time.sleep(5)
-
-# 8. Secure Tunnel Establishment
 from pyngrok import ngrok
-if NGROK_TOKEN: 
-    ngrok.set_auth_token(NGROK_TOKEN)
 
-try:
-    public_url = ngrok.connect(7860)
-    print("\n==========================================")
-    print(f" ONLINE ACCESS: {public_url}")
-    print("==========================================\n")
-except Exception as e:
-    print(f"\nTunneling error: {e}")
+WORK_DIR = Path("/kaggle/working")
+CORE_DIR = WORK_DIR / "LeBRON"
+UI_DIR = WORK_DIR / "Lebron-Local-UI"
 
+SURGERY_PATH = CORE_DIR / "lebron_jspace" / "surgery.py"
+
+PORT = 7860
+
+NGROK_TOKEN = "seu tolken"
+
+
+# ============================================================
+# PARAR SERVIDOR ANTIGO
+# ============================================================
+
+subprocess.run(
+    ["pkill", "-f", "uvicorn app:app"],
+    check=False,
+)
+
+subprocess.run(
+    ["pkill", "-f", "ngrok"],
+    check=False,
+)
+
+time.sleep(2)
+
+
+# ============================================================
+# CORRIGIR O BUG REAL
+# ============================================================
+
+if not SURGERY_PATH.is_file():
+    raise FileNotFoundError(
+        f"Arquivo não encontrado: {SURGERY_PATH}"
+    )
+
+codigo = SURGERY_PATH.read_text(encoding="utf-8")
+
+trecho_quebrado = '''def reset_inference_state(model: nn.Module) -> None:
+    """Prevent latent memory from leaking between independent generations."""
+    for module in iter_reasoners(model):
+        module.reset_inference_state()
+    for module in iter_maintainers(model):
+        module.set_supervision_positions(positions)
+'''
+
+trecho_corrigido = '''def reset_inference_state(model: nn.Module) -> None:
+    """Prevent latent memory and training supervision from leaking between generations."""
+    for module in iter_reasoners(model):
+        module.reset_inference_state()
+        module.set_supervision_positions(None)
+
+    for module in iter_maintainers(model):
+        module.set_supervision_positions(None)
+        module.last_summary = None
+        module.last_position_summary = None
+        module.last_stats = {}
+'''
+
+if trecho_quebrado in codigo:
+    codigo = codigo.replace(
+        trecho_quebrado,
+        trecho_corrigido,
+        1,
+    )
+
+elif "module.set_supervision_positions(positions)" in codigo:
+    codigo = codigo.replace(
+        "module.set_supervision_positions(positions)",
+        "module.set_supervision_positions(None)",
+    )
+
+elif trecho_corrigido in codigo:
+    print("✓ surgery.py já estava corrigido.")
+
+else:
+    raise RuntimeError(
+        "Não encontrei o trecho quebrado dentro de surgery.py."
+    )
+
+compile(
+    codigo,
+    str(SURGERY_PATH),
+    "exec",
+)
+
+SURGERY_PATH.write_text(
+    codigo,
+    encoding="utf-8",
+)
+
+print("✓ Bug real de positions corrigido em surgery.py.")
+
+
+# ============================================================
+# REMOVER CACHE PYTHON
+# ============================================================
+
+for cache in CORE_DIR.rglob("__pycache__"):
+    shutil.rmtree(cache, ignore_errors=True)
+
+for arquivo in CORE_DIR.rglob("*.pyc"):
+    try:
+        arquivo.unlink()
+    except OSError:
+        pass
+
+subprocess.run(
+    [
+        sys.executable,
+        "-m",
+        "compileall",
+        "-q",
+        str(CORE_DIR / "lebron_jspace"),
+    ],
+    check=True,
+)
+
+# Confirma que o erro foi removido.
+codigo_final = SURGERY_PATH.read_text(encoding="utf-8")
+
+if "module.set_supervision_positions(positions)" in codigo_final:
+    raise RuntimeError(
+        "A referência quebrada a positions ainda existe."
+    )
+
+print("✓ Nenhuma referência quebrada permaneceu.")
+
+
+# ============================================================
+# REINICIAR UVICORN
+# ============================================================
+
+ambiente = os.environ.copy()
+
+ambiente["PYTHONUNBUFFERED"] = "1"
+ambiente["TOKENIZERS_PARALLELISM"] = "false"
+ambiente["PYTHONPATH"] = (
+    str(CORE_DIR)
+    + os.pathsep
+    + ambiente.get("PYTHONPATH", "")
+)
+
+processo = subprocess.Popen(
+    [
+        sys.executable,
+        "-m",
+        "uvicorn",
+        "app:app",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        str(PORT),
+        "--log-level",
+        "info",
+    ],
+    cwd=str(UI_DIR),
+    env=ambiente,
+    stdout=subprocess.PIPE,
+    stderr=subprocess.STDOUT,
+    text=True,
+    bufsize=1,
+)
+
+
+def mostrar_logs():
+    if processo.stdout is None:
+        return
+
+    for linha in iter(processo.stdout.readline, ""):
+        if linha:
+            print(linha.rstrip())
+
+
+threading.Thread(
+    target=mostrar_logs,
+    daemon=True,
+).start()
+
+
+# ============================================================
+# ESPERAR SERVIDOR
+# ============================================================
+
+health_url = f"http://127.0.0.1:{PORT}/api/health"
+
+pronto = False
+
+for _ in range(120):
+    if processo.poll() is not None:
+        raise RuntimeError(
+            f"Uvicorn encerrou com código {processo.returncode}."
+        )
+
+    try:
+        with urllib.request.urlopen(
+            health_url,
+            timeout=2,
+        ) as resposta:
+            if resposta.status == 200:
+                pronto = True
+                break
+
+    except Exception:
+        time.sleep(1)
+
+if not pronto:
+    processo.terminate()
+    raise RuntimeError("O servidor não iniciou.")
+
+
+# ============================================================
+# NOVO NGROK
+# ============================================================
+
+ngrok.set_auth_token(NGROK_TOKEN)
+
+tunel = ngrok.connect(
+    PORT,
+    proto="http",
+    bind_tls=True,
+)
+
+globals()["LEBRON_PROCESS"] = processo
+globals()["LEBRON_TUNNEL"] = tunel
+
+print()
+print("=" * 70)
+print("CORREÇÃO REAL APLICADA")
+print("=" * 70)
+print(f"URL: {tunel.public_url}")
+print("=" * 70)
+print()
+print("Abra a URL, carregue o modelo apenas uma vez e crie uma nova conversa.")
 ```
 
 ---
